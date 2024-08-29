@@ -93,9 +93,7 @@ const ProductImage: React.FC<ProductImageProps> = ({ variant, size = 300, useCac
           <img src={imageSrc!} alt={variant.image.altText} className="w-32 h-32 object-cover cursor-pointer rounded mb-2" />
           <div className="mt-2 w-6 h-6 rounded-full flex justify-center items-center mx-auto border-1 border-stone-200" style={{ backgroundColor: color! }}>
           </div>
-          <div className="mt-2 w-full h-6 rounded">
-            <p className="text-center text-black">{color}</p>
-          </div>
+          <div className="mt-2 text-center text-sm text-gray-500 mt-1">{color}</div>
           <div className="text-center text-sm text-gray-500 mt-1">{hexColor}</div>
         </>
       )}
