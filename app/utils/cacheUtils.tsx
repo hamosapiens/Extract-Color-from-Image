@@ -72,4 +72,5 @@ export const clearCache = async () => {
   for (const key of keys) {
     await cache.delete(key);
   }
+  console.log("Cache cleared:", keys);
 };
