@@ -1,9 +1,9 @@
-// /Users/hm/extract-color-from-img/app/page.tsx
+"use client";
 
-import React, { Suspense } from 'react';
-import ProductPage from './components/ProductPage';
+import React, { Suspense } from "react";
+import { useSearchParams } from "next/navigation";
+import ProductPage from "./components/ProductPage";
 
-// Loading component for instant feedback
 function Loading() {
   return (
     <div className="p-6">
@@ -15,10 +15,14 @@ function Loading() {
 }
 
 const HomePage: React.FC = () => {
+  const searchParams = useSearchParams();
+  const cacheParam = searchParams.get("cache");
+  const useCache = cacheParam !== "false"; // Default to true unless "cache=false" is explicitly set
+
   return (
     <Suspense fallback={<Loading />}>
       <div className="p-4">
-        <ProductPage />
+        <ProductPage useCache={useCache} />
       </div>
     </Suspense>
   );

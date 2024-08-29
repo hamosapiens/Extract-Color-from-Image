@@ -65,3 +65,11 @@ export const getCachedColor = async (key: string) => {
   }
   return null;
 };
+
+export const clearCache = async () => {
+  const cache = await caches.open(CACHE_NAME);
+  const keys = await cache.keys();
+  for (const key of keys) {
+    await cache.delete(key);
+  }
+};

@@ -5,17 +5,17 @@ import { cacheImage, getCachedImage, cacheColor, getCachedColor } from "../utils
 
 interface ProductImageProps {
   variant: any;
-  size?: number; // Optional size parameter for image optimization
+  size?: number;
+  useCache?: boolean;
 }
 
-const ProductImage: React.FC<ProductImageProps> = ({ variant, size = 300 }) => {
+const ProductImage: React.FC<ProductImageProps> = ({ variant, size = 300, useCache = true }) => {
   const [isLoaded, setIsLoaded] = useState(false);
   const [imageSrc, setImageSrc] = useState<string | null>(null);
   const [color, setColor] = useState<string | null>(null);
   const [hexColor, setHexColor] = useState<string | null>(null);
   const imageRef = useRef<HTMLDivElement>(null);
 
-  // Function to get optimized Shopify image URL
   const getOptimizedImageUrl = (url: string, width: number, height: number) => {
     const extensionIndex = url.lastIndexOf(".");
     const versionIndex = url.indexOf("?");
@@ -28,36 +28,44 @@ const ProductImage: React.FC<ProductImageProps> = ({ variant, size = 300 }) => {
   const { observe } = useIntersectionObserver(async (entry) => {
     if (entry.isIntersecting && !isLoaded) {
       const optimizedUrl = getOptimizedImageUrl(variant.image.src, size, size);
-      const cachedImage = await getCachedImage(optimizedUrl);
-      const cachedColor = await getCachedColor(variant.id);
-      const cachedHexColor = await getCachedColor(variant.id + "-hex");
 
-      if (cachedImage && cachedColor && cachedHexColor) {
-        setImageSrc(cachedImage);
-        setColor(cachedColor);
-        setHexColor(cachedHexColor);
-        setIsLoaded(true);
-      } else {
-        const img = document.createElement('img');
-        img.crossOrigin = "Anonymous";
-        img.src = optimizedUrl;
+      if (useCache) {
+        const cachedImage = await getCachedImage(optimizedUrl);
+        const cachedColor = await getCachedColor(variant.id);
+        const cachedHexColor = await getCachedColor(variant.id + "-hex");
 
-        img.onload = async () => {
+        if (cachedImage && cachedColor && cachedHexColor) {
+          setImageSrc(cachedImage);
+          setColor(cachedColor);
+          setHexColor(cachedHexColor);
+          setIsLoaded(true);
+          return;
+        }
+      }
+
+      const img = document.createElement("img");
+      img.crossOrigin = "Anonymous";
+      img.src = optimizedUrl;
+
+      img.onload = async () => {
+        if (useCache) {
           await cacheImage(optimizedUrl, img.src);
-          setImageSrc(img.src);
+        }
+        setImageSrc(img.src);
 
-          const extractedColor = await advancedExtractColorFromImage(img.src);
-          const hex = rgbToHex(extractedColor);
-          
-          setColor(extractedColor);
-          setHexColor(hex);
-          
+        const extractedColor = await advancedExtractColorFromImage(img.src);
+        const hex = rgbToHex(extractedColor);
+
+        setColor(extractedColor);
+        setHexColor(hex);
+
+        if (useCache) {
           await cacheColor(variant.id, extractedColor);
           await cacheColor(variant.id + "-hex", hex);
+        }
 
-          setIsLoaded(true);
-        };
-      }
+        setIsLoaded(true);
+      };
     }
   });
 
@@ -68,13 +76,8 @@ const ProductImage: React.FC<ProductImageProps> = ({ variant, size = 300 }) => {
   }, [observe]);
 
   const rgbToHex = (rgb: string) => {
-    const rgbArray = rgb
-      .replace(/[^\d,]/g, "")
-      .split(",")
-      .map(Number);
-    const hex = rgbArray
-      .map((x) => x.toString(16).padStart(2, "0"))
-      .join("");
+    const rgbArray = rgb.replace(/[^\d,]/g, "").split(",").map(Number);
+    const hex = rgbArray.map((x) => x.toString(16).padStart(2, "0")).join("");
     return `#${hex}`;
   };
 
@@ -87,20 +90,13 @@ const ProductImage: React.FC<ProductImageProps> = ({ variant, size = 300 }) => {
         </div>
       ) : (
         <>
-          <img
-            src={imageSrc!}
-            alt={variant.image.altText}
-            className="w-32 h-32 object-cover cursor-pointer rounded mb-2"
-          />
-          <div
-            className="mt-2 w-full h-6 rounded"
-            style={{ backgroundColor: color! }}
-          >
-            <p className="text-center text-white">{color}</p>
+          <img src={imageSrc!} alt={variant.image.altText} className="w-32 h-32 object-cover cursor-pointer rounded mb-2" />
+          <div className="mt-2 w-6 h-6 rounded-full flex justify-center items-center mx-auto border-1 border-stone-200" style={{ backgroundColor: color! }}>
           </div>
-          <div className="text-center text-sm text-gray-500 mt-1">
-            {hexColor}
+          <div className="mt-2 w-full h-6 rounded">
+            <p className="text-center text-black">{color}</p>
           </div>
+          <div className="text-center text-sm text-gray-500 mt-1">{hexColor}</div>
         </>
       )}
     </div>
