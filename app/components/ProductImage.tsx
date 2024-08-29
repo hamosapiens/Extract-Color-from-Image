@@ -16,6 +16,7 @@ const ProductImage: React.FC<ProductImageProps> = ({ variant, size = 300, useCac
   const [hexColor, setHexColor] = useState<string | null>(null);
   const imageRef = useRef<HTMLDivElement>(null);
 
+  // Generate an optimized Shopify image URL
   const getOptimizedImageUrl = (url: string, width: number, height: number) => {
     const extensionIndex = url.lastIndexOf(".");
     const versionIndex = url.indexOf("?");
@@ -25,6 +26,7 @@ const ProductImage: React.FC<ProductImageProps> = ({ variant, size = 300, useCac
     return `${baseUrl}_${width}x${height}${extension}${version}`;
   };
 
+  // Intersection Observer logic to handle lazy loading
   const { observe } = useIntersectionObserver(async (entry) => {
     if (entry.isIntersecting && !isLoaded) {
       const optimizedUrl = getOptimizedImageUrl(variant.image.src, size, size);
@@ -43,14 +45,12 @@ const ProductImage: React.FC<ProductImageProps> = ({ variant, size = 300, useCac
         }
       }
 
-      const img = document.createElement("img");
+      // Load image and extract color
+      const img = new Image();
       img.crossOrigin = "Anonymous";
       img.src = optimizedUrl;
 
       img.onload = async () => {
-        if (useCache) {
-          await cacheImage(optimizedUrl, img.src);
-        }
         setImageSrc(img.src);
 
         const extractedColor = await advancedExtractColorFromImage(img.src);
@@ -60,6 +60,7 @@ const ProductImage: React.FC<ProductImageProps> = ({ variant, size = 300, useCac
         setHexColor(hex);
 
         if (useCache) {
+          await cacheImage(optimizedUrl, img.src);
           await cacheColor(variant.id, extractedColor);
           await cacheColor(variant.id + "-hex", hex);
         }
@@ -73,7 +74,7 @@ const ProductImage: React.FC<ProductImageProps> = ({ variant, size = 300, useCac
     if (imageRef.current) {
       observe(imageRef.current);
     }
-  }, [observe]);
+  }, [observe, useCache]); // Include `useCache` in the dependency array to handle toggling
 
   const rgbToHex = (rgb: string) => {
     const rgbArray = rgb.replace(/[^\d,]/g, "").split(",").map(Number);
@@ -90,9 +91,15 @@ const ProductImage: React.FC<ProductImageProps> = ({ variant, size = 300, useCac
         </div>
       ) : (
         <>
-          <img src={imageSrc!} alt={variant.image.altText} className="w-32 h-32 object-cover cursor-pointer rounded mb-2" />
-          <div className="mt-2 w-6 h-6 rounded-full flex justify-center items-center mx-auto border-1 border-stone-200" style={{ backgroundColor: color! }}>
-          </div>
+          <img
+            src={imageSrc!}
+            alt={variant.image.altText}
+            className="w-32 h-32 object-cover cursor-pointer rounded mb-2"
+          />
+          <div
+            className="mt-2 w-6 h-6 rounded-full flex justify-center items-center mx-auto border-1 border-stone-200"
+            style={{ backgroundColor: color! }}
+          ></div>
           <div className="mt-2 text-center text-sm text-gray-500 mt-1">{color}</div>
           <div className="text-center text-sm text-gray-500 mt-1">{hexColor}</div>
         </>
