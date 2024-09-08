@@ -1,4 +1,4 @@
-const CACHE_NAME = "product-cache";
+const CACHE_v1 = "product-cache";
 
 const isValidKey = (key: string): boolean => {
   // Allow only Shopify GID URIs and HTTPS URLs
@@ -16,7 +16,7 @@ export const cacheImage = async (url: string, data: string) => {
     return;
   }
 
-  const cache = await caches.open(CACHE_NAME);
+  const cache = await caches.open(CACHE_v1);
   const response = new Response(data, {
     headers: { "Content-Type": "image/jpeg" },
   });
@@ -30,7 +30,7 @@ export const getCachedImage = async (url: string) => {
     return null;
   }
 
-  const cache = await caches.open(CACHE_NAME);
+  const cache = await caches.open(CACHE_v1);
   const response = await cache.match(transformKey(url));
   if (response) {
     return response.text();
@@ -44,7 +44,7 @@ export const cacheColor = async (key: string, color: string) => {
     return;
   }
 
-  const cache = await caches.open(CACHE_NAME);
+  const cache = await caches.open(CACHE_v1);
   const response = new Response(color, {
     headers: { "Content-Type": "text/plain" },
   });
@@ -58,7 +58,7 @@ export const getCachedColor = async (key: string) => {
     return null;
   }
 
-  const cache = await caches.open(CACHE_NAME);
+  const cache = await caches.open(CACHE_v1);
   const response = await cache.match(transformKey(key));
   if (response) {
     return response.text();
@@ -67,7 +67,7 @@ export const getCachedColor = async (key: string) => {
 };
 
 export const clearCache = async () => {
-  const cache = await caches.open(CACHE_NAME);
+  const cache = await caches.open(CACHE_v1);
   const keys = await cache.keys();
   for (const key of keys) {
     await cache.delete(key);

@@ -12,7 +12,7 @@ export interface ProductImage {
   export interface ProductVariant {
     id: string;
     availableForSale: boolean;
-    barcode: string;
+    barcode: string | null; // Update here to allow null
     compareAtPrice: string;
     createdAt: string;
     displayName: string;
